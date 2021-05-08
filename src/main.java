@@ -34,7 +34,7 @@ public class main {
 	    }
 	}
 	
-	private static void Contour(Mat imageMat) {
+	private static Mat Contour(Mat imageMat) {
 		Mat rgb = new Mat();
 		rgb = imageMat.clone();
 		Mat grayImage = new Mat();
@@ -70,13 +70,15 @@ public class main {
 	        //Imgcodecs.imwrite("doc_contour.jpg", imageMat);
 	        Imgcodecs.imwrite("doc_cutimg.jpg", img_result);
 		}
+		return img_result;
 	}
-	private static String cleanimg(String filename) {
-		String result = "";
+	
+	private static void cleanimg(Mat input) {
+
 		Mat blur = new Mat();
 		Mat output = new Mat();
 		Mat gray = new Mat();
-		Mat img_input = Imgcodecs.imread(filename);
+		Mat img_input = input.clone();
 		Mat size_up = new Mat();
 		
 		Imgproc.resize(img_input, size_up, new Size(), 3, 3, Imgproc.INTER_CUBIC);
@@ -86,12 +88,11 @@ public class main {
 		Imgproc.threshold(gray, output, 200, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
 		Imgcodecs.imwrite("sample_result.jpg", output);
 		
-		return result;
 	}
 	
 	static Tesseract instance = Tesseract.getInstance();
 	
-	public static String process(String fileName) {
+	public static String findText(String fileName) {
 		File inputFile = new File(fileName);
 		String result = "";
 		try {
@@ -103,12 +104,16 @@ public class main {
 	}
 	
 	public static void main(String[] args) {
+		
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-		//System.out.println(process("input.jpg"));
+		
 		Mat inputmat = Imgcodecs.imread("input.jpg");
-		Contour(inputmat);
-		String result = cleanimg("doc_cutimg.jpg");
-		System.out.println(process("sample_result.jpg"));
+		
+		Mat cont = Contour(inputmat);
+	
+		cleanimg(cont);
+		
+		System.out.println(findText("sample_result.jpg"));
 	}
 		
 }
