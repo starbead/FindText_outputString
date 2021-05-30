@@ -39,6 +39,8 @@ public class main {
 		rgb = imageMat.clone();
 		Mat grayImage = new Mat();
 		Mat img_result = new Mat();
+		Rect cutImg = new Rect();
+		//Mat img_mask = new Mat(imageMat.rows(), imageMat.cols(), CvType.CV_8UC1, new Scalar(0));
 		Imgproc.cvtColor(rgb, grayImage, Imgproc.COLOR_RGB2GRAY);
 		
 		Mat gradThresh = new Mat();
@@ -50,7 +52,6 @@ public class main {
 		removeVerticalLines(gradThresh, 100);
 		Imgproc.findContours(gradThresh, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
 		
-		
 		if(contours.size() > 0) {
 			for(int idx = 0; idx < contours.size(); idx++) {
 				Rect rect = Imgproc.boundingRect(contours.get(idx));
@@ -60,10 +61,14 @@ public class main {
 					Imgproc.rectangle(imageMat, new Point(rect.br().x - rect.width, rect.br().y - rect.height)
 	                        , rect.br()
 	                        , new Scalar(0, 255, 0), 5);
-					Rect cutImg = new Rect(new Point(rect.br().x - rect.width, rect.br().y - rect.height), rect.br());
-					img_result = new Mat(imageMat, cutImg);
+					cutImg = new Rect(new Point(rect.br().x - rect.width, rect.br().y - rect.height), rect.br());
+					//Imgproc.rectangle(img_mask, new Point(rect.br().x - rect.width, rect.br().y - rect.height), rect.br(), new Scalar(255), -1);
 				}
 			}
+	        //imageMat.copyTo(img_result, img_mask);
+	        //Imgcodecs.imwrite("sample_mask.jpg", img_result);
+			img_result = new Mat(imageMat, cutImg);
+			//Imgcodecs.imwrite("sample_mask.jpg", img_mask);
 			//Imgcodecs.imwrite("doc_original.jpg", rgb);
 	        //Imgcodecs.imwrite("doc_gray.jpg", grayImage);
 	        //Imgcodecs.imwrite("doc_thresh.jpg", gradThresh);
@@ -74,22 +79,25 @@ public class main {
 	}
 	
 	private static void cleanimg(Mat input) {
-
+		//Mat inputmat = Imgcodecs.imread("sample_input1.jpg");
 		Mat blur = new Mat();
 		Mat output = new Mat();
 		Mat gray = new Mat();
-		Mat img_input = input.clone();
+		Mat clone_img = input.clone();
 		Mat size_up = new Mat();
-		
-		Imgproc.resize(img_input, size_up, new Size(), 3, 3, Imgproc.INTER_CUBIC);
+		//that is sharptext() just meaning
+		//Imgproc.pyrUp(clone_img, size_up);
+		Imgproc.resize(clone_img, size_up, new Size(), 15, 15, Imgproc.INTER_CUBIC);
 		Imgproc.cvtColor(size_up, blur, Imgproc.COLOR_RGB2GRAY);
 		Imgproc.GaussianBlur(size_up, blur, new Size(3, 3), 0);
 		Imgproc.cvtColor(blur, gray, Imgproc.COLOR_RGB2GRAY);
-		Imgproc.threshold(gray, output, 200, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
+		
+		Core.addWeighted(gray, 1.6, gray, -0.15, 0.5, gray);
+		Imgcodecs.imwrite("testimg.jpg", gray);
+		Imgproc.threshold(gray, output, 205, 255, Imgproc.THRESH_BINARY);
 		Imgcodecs.imwrite("sample_result.jpg", output);
 		
 	}
-	
 	static Tesseract instance = Tesseract.getInstance();
 	
 	public static String findText(String fileName) {
@@ -103,8 +111,7 @@ public class main {
 		return result;
 	}
 	
-	public static void main(String[] args) {
-		
+	public static void CV_start() {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		Mat inputmat = Imgcodecs.imread("input.jpg");
@@ -114,6 +121,12 @@ public class main {
 		cleanimg(cont);
 		
 		System.out.println(findText("sample_result.jpg"));
+	}
+	
+	public static void main(String[] args) {
+		
+		CV_start();
+		
 	}
 		
 }
